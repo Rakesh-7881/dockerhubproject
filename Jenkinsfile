@@ -2,9 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
-        DOCKERHUB_REPO = "your-dockerhub-username/your-app"
-        IMAGE_TAG = "latest"
+        DOCKERHUB_REPO = "dockertest7881/your-app"
     }
 
     stages {
@@ -16,19 +14,17 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh """
-                        docker build -t $DOCKERHUB_REPO:$IMAGE_TAG .
-                    """
-                }
+                sh "docker build -t ${DOCKERHUB_REPO}:latest ."
             }
         }
 
         stage('Login to DockerHub') {
             steps {
-                script {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', 
+                                                  usernameVariable: 'DOCKERHUB_USER', 
+                                                  passwordVariable: 'DOCKERHUB_PASS')]) {
                     sh """
-                        echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                        echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USER --password-stdin
                     """
                 }
             }
@@ -36,9 +32,7 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                script {
-                    sh "docker push $DOCKERHUB_REPO:$IMAGE_TAG"
-                }
+                sh "docker push ${DOCKERHUB_REPO}:latest"
             }
         }
     }
